@@ -118,6 +118,55 @@ exports.login = async (req, res) => {
     }
 };
 
+ exports.guestLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Find user by email
+        const user = await User.findOne({ email }).exec();
+
+        // Check if user exists
+        if (!user) {
+            return res.status(400).json({
+                error: 'User with that email does not exist. Please register.',
+            });
+        }
+
+        // Check if user is a guest
+        if (user.role !== 'subscriber') {
+            return res.status(401).json({
+                error: 'Not authorized as guest user.',
+            });
+        }
+
+        // Authenticate user
+        if (!user.authenticate(password)) {
+            return res.status(401).json({
+                error: 'Email and password do not match.',
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '7d',
+        });
+
+        // Set cookie
+        res.cookie('token', token, { expiresIn: '7d' });
+
+        // Send response
+        const { _id: userId, name: userName, role: userRole } = user; // Renaming variables to avoid conflict
+        return res.json({ token, user: { _id: userId, name: userName, email, role: userRole } });
+    } catch (err) {
+        console.error('Error during guest login:', err);
+        return res.status(500).json({
+            error: 'Something went wrong. Please try again.',
+        });
+    }
+};
+
+
+
 // Example middleware to set req.user
 exports.requireSignin = (req, res, next) => {
     const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
