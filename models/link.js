@@ -1,47 +1,50 @@
 const mongoose = require('mongoose');
-const {ObjectId} = mongoose.Schema
+const { ObjectId } = mongoose.Schema;
 
 const linkSchema = new mongoose.Schema({
-    title:{
-        type:String,
-        trim:true,
-        required:true,
-        max:256
+    title: {
+        type: String,
+        trim: true,
+        required: true,
+        max: 256
     },
-    url:{
-        type:String,
-        trim:true,
-        required:true,
-        max:256
+    url: {
+        type: String,
+        trim: true,
+        required: true,
+        max: 256
     },
-    slug:{
-        type:String,
-        lowercase:true,
-        required:true,
-        index:true,
+    slug: {
+        type: String,
+        lowercase: true,
+        required: true,
+        index: true,
     },
-    postedBy:{
-        type:ObjectId,
-        ref:'User'
+    postedBy: {
+        type: ObjectId,
+        ref: 'User'
     },
     categories: [{
-        type:ObjectId,
-        ref:'Category',
-        required:true
+        type: ObjectId,
+        ref: 'Category',
+        required: true
     }],
-    type:{
-        type:String,
+    type: {
+        type: String,
         default: 'Free'
     },
-    medium:{
-        type:String,
+    medium: {
+        type: String,
         default: 'Video'
     },
-    clicks:{
-        type:Number,
-        default:0
+    clicks: {
+        type: Number,
+        default: 0
+    },
+    approved: {  // New field for approval status
+        type: Boolean,
+        default: false // Default to false when a link is submitted
     }
-},{timestamps:true})
+}, { timestamps: true });
 
-
-module.exports = mongoose.model('Link',linkSchema)
+module.exports = mongoose.model('Link', linkSchema);

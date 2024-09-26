@@ -26,7 +26,8 @@ exports.create = async (req, res) => {
             type,
             medium,
             slug,
-            postedBy: req.user._id // Associate the link with the authenticated user
+            postedBy: req.user._id, // Associate the link with the authenticated user
+            approved: false
         });
 
         const data = await link.save(); // Save link and wait for completion
@@ -64,7 +65,7 @@ exports.list = async (req, res) => {
     let skip = req.body.skip ? parseInt(req.body.skip) : 0;
 
     try {
-        const data = await Link.find()
+        const data = await Link.find({ approved: true }) // Filter for approved links
             .populate('postedBy', 'name')
             .populate('categories', 'name slug')
             .sort({ createdAt: -1 })
@@ -80,6 +81,7 @@ exports.list = async (req, res) => {
         });
     }
 };
+
 
 
 exports.read = async (req, res) => {
@@ -195,3 +197,49 @@ exports.popularInCategory = async (req, res) => {
         });
     }
 };
+
+
+// controllers/link.js
+
+exports.approve = async (req, res) => {
+    try {
+        const linkId = req.params.id;
+
+        // Find the link by ID and update its status to approved
+        const updatedLink = await Link.findByIdAndUpdate(
+            linkId, 
+            { approved: true }, // Assuming you have an 'approved' field
+            { new: true }
+        );
+
+        if (!updatedLink) {
+            return res.status(404).json({ error: 'Link not found' });
+        }
+
+        res.json({ message: 'Link approved successfully', link: updatedLink });
+    } catch (error) {
+        console.error('Error approving link:', error);
+        return res.status(500).json({ error: 'Server error approving link' });
+    }
+};
+
+
+
+exports.listUnapproved = async (req, res) => {
+    try {
+        const data = await Link.find({ approved: false }) // Filter for unapproved links
+            .populate('postedBy', 'name')
+            .populate('categories', 'name slug')
+            .sort({ createdAt: -1 })
+            .exec();
+        
+        res.json(data);
+    } catch (err) {
+        console.error('Error listing unapproved links:', err);
+        return res.status(400).json({
+            error: 'Could not list unapproved links'
+        });
+    }
+};
+
+
